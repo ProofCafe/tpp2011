@@ -45,14 +45,40 @@ Proof.
  intros c k; simpl. destruct (m_aux c k). apply e.
 Qed.
 
-Parameter max min : nat -> nat.
+Definition max k :=
+  C.fold (fun c acc => MinMax.max (m(c,k)) acc) C.children (m(C.c0,k)).
+
+Lemma max_maximum : forall k c, m(c, k) <= max k.
+Proof.
+ cut(forall k c x0 cs,
+   C.In c cs -> m(c, k) <= C.fold (fun c acc => MinMax.max (m(c,k)) acc) cs x0);
+     [intros aux k c; apply aux; apply C.children_finite | ].
+ intros k c x0.
+ apply (C.ind (fun cs => C.In c cs ->
+   m (c, k) <= C.fold (fun c0 acc => MinMax.max (m (c0, k)) acc) cs x0));intros.
+  rewrite C.fold_empty.
+  destruct (C.empty_in c). apply H.
+
+  rewrite C.fold_step.
+   simpl in H0. destruct (C.add_in _ _ _ H0).
+    rewrite H1. apply Max.le_max_l.
+
+    apply (le_trans _ _ _ (H H1)). apply Max.le_max_r.
+
+   intros a b. rewrite (Max.max_assoc (m(b,k))).
+   rewrite (Max.max_comm _ (m(a,k))). rewrite <- (Max.max_assoc (m(a,k))).
+   reflexivity.
+Qed.
+  
+
+Parameter min : nat -> nat.
 
 Definition num (x_k : candy * nat) : nat :=
   let (x, k) := x_k in
   C.size (C.filter (fun c => beq_nat(m(c,k)) x) C.children).
 
 Axiom min_minimum : forall k c, min k <= m(c, k).
-Axiom max_maximum : forall k c, m(c, k) <= max k.
+
 Axiom min_exists : forall k, exists c, m(c, k) = min k.
 Axiom max_exists : forall k, exists c, m(c, k) = max k.
 
