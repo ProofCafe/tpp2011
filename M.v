@@ -177,7 +177,7 @@ Qed.
 
 
 
-Lemma b : forall k c,
+Lemma m_lt_eq : forall k c,
   m(c, S k) = min k -> m(c, k) = min k.
 Proof.
  intros.
