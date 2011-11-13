@@ -106,10 +106,65 @@ Lemma l3 : forall c k,
   min k < m(c, k) -> min k < m(c, S k).
 Admitted.
 
-(* 4 *)
-Lemma l4 : forall c k,
-  m(c, k) < m(right c, k) -> m(c, k) < m(c, S k).
+Lemma div2_plus : forall a b,
+  even a ->
+  even b ->
+  div2 a + div2 b = div2 (a + b).
+Proof.
 Admitted.
+
+
+Lemma double_multi : forall n,
+  double n = 2 * n.
+Proof.
+intros.
+unfold double.
+omega.
+Qed.
+
+Lemma double_lt: forall x y,
+  double x < double y ->
+  x < y.
+Proof.
+intros.
+unfold double in H.
+omega.
+Qed.
+
+(* 4 *)
+Lemma l4 : forall k c,
+  m(c, k) < m(right c, k) -> m(c, k) < m(c, S k).
+Proof with auto.
+unfold m, proj1_sig.
+simpl.
+intros.
+destruct (m_aux c k).
+destruct (m_aux (right c) k).
+destruct (even_odd_dec (div2 x + div2 x0)).
+ (* case: even (div2 x + div2 x0) *)
+ apply even_2n in e.
+ apply even_2n in e0.
+ destruct e as [ p P ].
+ destruct e0 as [ q Q ].
+ rewrite P, Q in *.
+ clear P Q.
+ rewrite (double_multi p), (double_multi q).
+ rewrite (div2_double p), (div2_double q).
+ apply double_lt in H.
+ omega.
+
+ (* case: odd (div2 x + div2 x0) *)
+ apply even_2n in e.
+ apply even_2n in e0.
+ destruct e as [ p P ].
+ destruct e0 as [ q Q ].
+ rewrite P, Q in *.
+ clear P Q.
+ rewrite (double_multi p), (double_multi q).
+ rewrite (div2_double p), (div2_double q).
+ apply double_lt in H.
+ omega.
+Qed.
 
 (* 5 *)
 Fixpoint fpow n {A:Type} (f: A -> A) x :=
