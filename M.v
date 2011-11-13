@@ -1,6 +1,7 @@
 Require Import Arith.
 Require Import Even.
 Require Import Div2.
+Require Import Omega.
 
 Parameter child : Set.
 Parameter right : child -> child.
@@ -75,9 +76,7 @@ Lemma l1 : forall k, max (S k) <= max k.
   assert (forall c, m (c,k) <= max k); try apply max_maximum.
   destruct H.
   specialize H0 with x.
-  Require Import Omega.
   omega. (* main goal reached *)
-  Show.  
   assert (exists c, m(c,k) = max k); try apply max_exists.
   assert (forall c k, m (c,(S k)) <= max k).
   intros.
@@ -185,8 +184,6 @@ Proof.
  rewrite <- HH; apply H. 
 Qed.
  
-Require Import Omega.
-
 Lemma l2 : forall k, min (k) <= min (S k).
 Proof.
  intro k. apply l2_aux. intro c.
@@ -226,6 +223,20 @@ Proof.
 Admitted.
  *)
 
+Lemma min_even : forall k, even(min k).
+Proof.
+ intro k. destruct (min_exists k) as [c Hc].
+ rewrite <- Hc. apply m_even.
+Qed.
+ 
+Lemma lt_div2_even : forall x y, even x -> even y -> x < y -> div2 x < div2 y.
+Proof.
+ intros x y Ex Ey H.
+ cut (forall x y, double x < double y -> x < y);
+     [intro HH; apply HH | unfold double; intros; omega].
+ rewrite <- (even_double _ Ex). rewrite <- (even_double _ Ey). apply H.
+Qed. 
+
 Lemma l3 : forall c k,
   min k < m(c, k) -> min k < m(c, S k).
 Proof.
@@ -235,7 +246,8 @@ Proof.
  intros.
  case_eq (m_aux (right c) k).
  intros.
- destruct (even_odd_dec (div2 x + div2 x0)).
+
+
   simpl.
   apply (le_lt_trans _ (div2 (min k) + div2 x0)).
    cut (min k = div2(min k) + div2(min k)); intros.
@@ -274,7 +286,7 @@ Proof.
     apply even_2n in H6.
     destruct H5.
     destruct H6.
-    rewrite e2, e3.
+    rewrite e1, e2.
     assert(forall n, double n = 2 * n).
      intros.
      unfold double.
@@ -283,8 +295,8 @@ Proof.
      rewrite (H5 x2),(H5 x3).
      rewrite div2_double.
      rewrite div2_double.
+       rewrite e1 in H7.
        rewrite e2 in H7.
-       rewrite e3 in H7.
        unfold double in H7.
        omega.
 
@@ -346,15 +358,17 @@ Check le_lt_trans.
    destruct (min k).
    destruct e1.
  *)
-Admitted.
 
-Lemma div2_plus : forall a b,
-  even a ->
-  even b ->
-  div2 a + div2 b = div2 (a + b).
-Proof.
-Admitted.
+ (* min k = div2 (min k) + div2 (min k) *)
+ destruct (min_exists k) as[c1 Hc].
+ rewrite  (even_double (min k)) at 1; [reflexivity |].
+ rewrite <- Hc. apply m_even.
 
+ (* div2 (min k) + div2 x0 < m(c, S k) *)
+ destruct (even_odd_dec (div2 x + div2 x0)); [| apply lt_S];
+    apply plus_lt_compat_r;
+    apply (lt_div2_even _ _ (min_even k) e); apply H0.
+Qed.
 
 Lemma double_multi : forall n,
   double n = 2 * n.
