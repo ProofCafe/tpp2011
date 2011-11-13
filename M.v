@@ -50,16 +50,126 @@ Parameter num : candy * nat -> nat.
 Axiom min_minimum : forall k c, min k <= m(c, k).
 Axiom max_maximum : forall k c, m(c, k) <= max k.
 Axiom min_exists : forall k, exists c, m(c, k) = min k.
+Axiom max_exists : forall k, exists c, m(c, k) = max k.
 
 Lemma min_max : forall k, min k <= max k.
 Proof.
  intro k. destruct (min_exists k). rewrite <- H. apply max_maximum.
 Qed.
 
+Lemma max_even : forall k, even (max k).
+Proof.
+  intro k.
+  generalize (max_exists k).
+  intro H.
+  destruct H as [c H'].
+  rewrite <- H'.
+  apply m_even.
+Qed.
+
 (* 1 *)
 Lemma l1 : forall k, max (S k) <= max k.
-Proof.
-Admitted.
+  intro k.
+  cut (exists c, max (S k) <= m (c,k)). (* subgoal A introduced *)
+  intro H.
+  assert (forall c, m (c,k) <= max k); try apply max_maximum.
+  destruct H.
+  specialize H0 with x.
+  Require Import Omega.
+  omega. (* main goal reached *)
+  Show.  
+  assert (exists c, m(c,k) = max k); try apply max_exists.
+  assert (forall c k, m (c,(S k)) <= max k).
+  intros.
+  simpl.
+  case_eq (m_aux c k0).
+  intros.
+  case_eq (m_aux (right c) k0).
+  intros.
+  destruct (even_odd_dec (div2 x + div2 x0)).
+
+  simpl.
+  assert (x <= max k0).
+    assert (x = m (c,k0)).
+      simpl.
+      rewrite H0.
+      simpl.
+      reflexivity.
+    rewrite H2.
+    apply max_maximum.
+  assert (x0 <= max k0).
+    assert (x0 = m (right c,k0)).
+      simpl.
+      rewrite H1.
+      simpl.
+      reflexivity.
+    rewrite H3.
+    apply max_maximum.
+  assert (max k0 = div2 (max k0) + div2 (max k0)).
+    apply even_double.
+  apply (max_even k0).
+  generalize (even_2n x e).
+  generalize (even_2n x0 e0).
+  intros.
+  destruct H5.
+  destruct H6.
+  rewrite e2,e3 in *.
+  assert (forall n, 2 * n = double n).
+    unfold double; intros; omega.
+  rewrite <- (H5 x2), <- (H5 x1) in *.
+  rewrite (div2_double x2),(div2_double x1) in *.
+  omega.
+
+  simpl.
+  assert (x <= max k0).
+    assert (x = m (c,k0)).
+      simpl.
+      rewrite H0.
+      simpl.
+      reflexivity.
+    rewrite H2.
+    apply max_maximum.
+  assert (x0 <= max k0).
+    assert (x0 = m (right c,k0)).
+      simpl.
+      rewrite H1.
+      simpl.
+      reflexivity.
+    rewrite H3.
+    apply max_maximum.
+  assert (max k0 = div2 (max k0) + div2 (max k0)).
+    apply even_double.
+    apply (max_even k0).
+  generalize (even_2n x e).
+  generalize (even_2n x0 e0).
+  intros.
+  destruct H5.
+  destruct H6.
+  rewrite e1,e2 in *.
+  assert (forall n, 2 * n = double n).
+    unfold double; intros; omega.
+  rewrite <- (H5 x2), <- (H5 x1) in *.
+  rewrite (div2_double x2),(div2_double x1).
+  apply lt_le_S.
+  assert (x2 + x1 <= max k0 /\ x2 + x1 <> max k0 -> x2 + x1 < max k0).
+    omega.
+  apply H6.
+  split.
+  omega.
+  rewrite (div2_double x2), (div2_double x1) in o.
+  intro.
+  rewrite H7 in *.
+  apply (not_even_and_odd (max k0) (max_even k0) o).
+
+  generalize (max_exists (S k)).
+  intro.
+  destruct H.
+  exists x.
+  destruct H1.
+  rewrite <- H1.
+  rewrite H.
+  apply H0.
+Qed.
 
 Lemma max_i : forall i k, max (i + k) <= max k.
 Proof.
@@ -238,10 +348,65 @@ Check le_lt_trans.
  *)
 Admitted.
 
-(* 4 *)
-Lemma l4 : forall c k,
-  m(c, k) < m(right c, k) -> m(c, k) < m(c, S k).
+Lemma div2_plus : forall a b,
+  even a ->
+  even b ->
+  div2 a + div2 b = div2 (a + b).
+Proof.
 Admitted.
+
+
+Lemma double_multi : forall n,
+  double n = 2 * n.
+Proof.
+intros.
+unfold double.
+omega.
+Qed.
+
+Lemma double_lt: forall x y,
+  double x < double y ->
+  x < y.
+Proof.
+intros.
+unfold double in H.
+omega.
+Qed.
+
+(* 4 *)
+Lemma l4 : forall k c,
+  m(c, k) < m(right c, k) -> m(c, k) < m(c, S k).
+Proof with auto.
+unfold m, proj1_sig.
+simpl.
+intros.
+destruct (m_aux c k).
+destruct (m_aux (right c) k).
+destruct (even_odd_dec (div2 x + div2 x0)).
+ (* case: even (div2 x + div2 x0) *)
+ apply even_2n in e.
+ apply even_2n in e0.
+ destruct e as [ p P ].
+ destruct e0 as [ q Q ].
+ rewrite P, Q in *.
+ clear P Q.
+ rewrite (double_multi p), (double_multi q).
+ rewrite (div2_double p), (div2_double q).
+ apply double_lt in H.
+ omega.
+
+ (* case: odd (div2 x + div2 x0) *)
+ apply even_2n in e.
+ apply even_2n in e0.
+ destruct e as [ p P ].
+ destruct e0 as [ q Q ].
+ rewrite P, Q in *.
+ clear P Q.
+ rewrite (double_multi p), (double_multi q).
+ rewrite (div2_double p), (div2_double q).
+ apply double_lt in H.
+ omega.
+Qed.
 
 (* 5 *)
 Fixpoint fpow n {A:Type} (f: A -> A) x :=
