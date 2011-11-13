@@ -203,10 +203,10 @@ Proof.
  rewrite div2_double. rewrite div2_double.
  unfold double in req. unfold double in ceq.
  destruct (even_odd_dec (chalf + rhalf)); simpl.
-  (* \u5076\u6570 *)
+  (* EVEN *)
   omega.
   
-  (* \u5947\u6570 *)
+  (* ODD *)
   omega.
 Qed.
 
@@ -217,13 +217,6 @@ Proof.
  intros.
  apply min_minimum.
 Qed.
-
-(*
-Lemma l3_aux2 : forall c k,
-  0 < k -> m(c, S k)*2 > m(c, k) + m(right(c), k).
-Proof.
-Admitted.
- *)
 
 Lemma min_even : forall k, even(min k).
 Proof.
@@ -314,53 +307,6 @@ Proof.
       apply m_even.
       apply min_minimum.
 
-(* Admitting defeat *)
-
-(*
-
-Print double.
-    Check div2_double.
- 
-    rewrite<- (div2_double (div2 x1)).
-    induction x1; induction y; simpl; try omega; try eauto.
-    
-    simpl.
-    omega.
-    simpl.
-    auto.
-    omega.
-    simpl.
-    
-
-Check (proj1_sig (m_aux (right c) k)).
-Print m.
-    assert (x0 = m(right(c), k)).
-    apply (min_minimum k (right c)).
-    apply H3.
-    destruct H.
-    apply (min_minimum k ).
-Check le_lt_trans.
-
-  cut (forall x y y', y < y' -> x < y+z -> x < y'+z).
-  Check (plus_lt_compat_r (div2 (min k))(div2 x)).
- destruct (m_aux c k).
- destruct (m_aux (right c) k).
- destruct (even_odd_dec((div2 x)+(div2 x0))).
-  simpl.
-  intros.
-  transitivity x.
-   apply H.
-   
-  case_eq (m_aux c k).
-  intros.
-  case_eq (m_aux (right c) k).
-  intros.
-  destruct (even_odd_dec (div2 x + div2 x0)).
-   simpl.
-   destruct (min k).
-   destruct e1.
- *)
-
  (* min k = div2 (min k) + div2 (min k) *)
  destruct (min_exists k) as[c1 Hc].
  rewrite  (even_double (min k)) at 1; [reflexivity |].
@@ -443,11 +389,11 @@ Proof.
 
   (* case: S n *)
   destruct(le_lt_eq_dec (min k) (m(fpow n right c, k))); [apply min_minimum| |].
-   (* min k < m (fpow n right c, k) \u306e\u3068\u304d *)
+   (* min k < m (fpow n right c, k) のとき *)
    destruct (IHn c H l).
    exists x; apply H1.
 
-   (* min k = m (fpow n right c, k) \u306e\u3068\u304d *)
+   (* min k = m (fpow n right c, k) のとき *)
    exists (fpow n right c).
    split; [rewrite e; reflexivity | rewrite <- e; apply H0].
 Qed.
