@@ -1,8 +1,10 @@
 Require Import Arith.
 Require Import Even.
 Require Import Div2.
+Require Children.
+Module C := Children.
 
-Parameter child : Set.
+Definition child := C.t.
 Parameter right : child -> child.
 
 (* number of candies *)
@@ -12,8 +14,6 @@ Definition candy : Set := nat.
 Parameter m0 : child -> candy.
 Axiom m0_even : forall c, even (m0 c).
 
-Parameter exists_dec : forall (P: child -> Prop) (f:forall c, {P c}+{~P c}),
-  {exists c, P c}+{forall c, ~P c}.
 
 Definition m_aux : child -> nat -> {n | even n}.
  refine (fix iter c k : {n|even n} :=
@@ -44,12 +44,18 @@ Proof.
  intros c k; simpl. destruct (m_aux c k). apply e.
 Qed.
 
+Parameter c0 : child.
+
+
+Definition max k := C.fold.
+
 Parameter max min : nat -> nat.
 Parameter num : candy * nat -> nat.
 
 Axiom min_minimum : forall k c, min k <= m(c, k).
 Axiom max_maximum : forall k c, m(c, k) <= max k.
 Axiom min_exists : forall k, exists c, m(c, k) = min k.
+
 
 Lemma min_max : forall k, min k <= max k.
 Proof.
