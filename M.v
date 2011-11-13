@@ -2,8 +2,10 @@ Require Import Arith.
 Require Import Even.
 Require Import Div2.
 Require Import Omega.
+Require Children.
+Module C := Children.
 
-Parameter child : Set.
+Definition child := C.child.
 Parameter right : child -> child.
 
 (* number of candies *)
@@ -12,9 +14,6 @@ Definition candy : Set := nat.
 (* initial candies for children *)
 Parameter m0 : child -> candy.
 Axiom m0_even : forall c, even (m0 c).
-
-Parameter exists_dec : forall (P: child -> Prop) (f:forall c, {P c}+{~P c}),
-  {exists c, P c}+{forall c, ~P c}.
 
 Definition m_aux : child -> nat -> {n | even n}.
  refine (fix iter c k : {n|even n} :=
@@ -46,7 +45,10 @@ Proof.
 Qed.
 
 Parameter max min : nat -> nat.
-Parameter num : candy * nat -> nat.
+
+Definition num (x_k : candy * nat) : nat :=
+  let (x, k) := x_k in
+  C.size (C.filter (fun c => beq_nat(m(c,k)) x) C.children).
 
 Axiom min_minimum : forall k c, min k <= m(c, k).
 Axiom max_maximum : forall k c, m(c, k) <= max k.
@@ -461,10 +463,34 @@ Proof.
  rewrite HH in Hd; apply Hd.
 Qed.
 
+Lemma m_lt_eq : forall k c,
+  m(c, S k) = min k -> m(c, k) = min k.
+Proof.
+ intros.
+ generalize (min_minimum k c); intros.
+ destruct (le_lt_eq_dec _ _ H0); auto.
+ apply l3 in l.
+ rewrite <- H in l.
+ apply lt_irrefl in l.
+ contradiction.
+Qed.
+ 
 Lemma l5_aux : forall c k,
   m(c, k) = min k -> min k < m(c, S k) -> num(min k, S k) < num (min k, k).
-(* use (3) and finite set's filter lemma*)
-Admitted.
+Proof.
+ intros.
+ unfold num.
+ apply C.filter_length_lt.
+  exists c. split.
+   intro. destruct (beq_nat_true_iff (m(c,S k)) (min k)) as[HH _].
+   destruct (lt_irrefl (min k)). rewrite <- (HH H1) at 2. apply H0.
+
+   apply beq_nat_true_iff. apply H.
+
+  apply C.filter2_subset. intros c0 H1.
+  apply beq_nat_true_iff. apply m_lt_eq. apply beq_nat_true_iff.
+  apply H1.
+Qed.
  
 Lemma l5 : forall k,
   (exists c, min k < m(c, k)) -> num(min k, S k) < num(min k, k).
@@ -494,13 +520,13 @@ Proof.
   inversion H.
 
   (* case: S d *)
-  destruct (exists_dec _ (fun c => lt_dec (min k) (m(c,k)))).
-   (* min k < m(c, k) \u306e\u3068\u304d *)
+  destruct (C.exists_dec _ (fun c => lt_dec (min k) (m(c,k)))).
+   (* min k < m(c, k) のとき *)
    destruct (le_lt_eq_dec _ _ (l2 k)).
-    (* min k < min (1+k) \u306e\u3068\u304d *)
+    (* min k < min (1+k) のとき *)
     exists 1; right; apply l.
 
-    (* min k = min (1+k) \u306e\u3068\u304d *)
+    (* min k = min (1+k) のとき *)
     destruct (IHd (S k)) as [i HH].
      rewrite <- e0.
      eapply lt_le_trans; [apply (l5 _ e) | apply (lt_n_Sm_le _ _ H)].
@@ -508,7 +534,7 @@ Proof.
      exists (S i). rewrite plus_Snm_nSm. rewrite e0.
      destruct HH; [left | right]; apply H0.
 
-   (* min k >= m(c, k) \u306e\u3068\u304d *)
+   (* min k >= m(c, k) のとき *)
    exists 0. left. simpl. unfold same. intros.
    destruct (le_lt_eq_dec _ _ (min_minimum k c)); auto.
    destruct (n c); apply l.
