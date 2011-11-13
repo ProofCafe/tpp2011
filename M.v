@@ -168,10 +168,28 @@ Proof.
  intros k.
 Admitted.
 
+Lemma lt_le : forall x y,
+  x <= y -> x < y \/ x = y.
+Proof.
+intros.
+omega.
+Qed.
+
+
+
 Lemma b : forall k c,
   m(c, S k) = min k -> m(c, k) = min k.
-Admitted.
- 
+Proof.
+ intros.
+ generalize (min_minimum k c); intros.
+ apply lt_le in H0.
+ inversion H0; auto.
+ apply l3 in H1.
+ rewrite <- H in H1.
+ apply lt_irrefl in H1.
+ contradiction.
+Qed.
+
 Lemma l5_aux : forall c k,
   m(c, k) = min k -> min k < m(c, S k) -> num(min k, S k) < num (min k, k).
 Proof.
