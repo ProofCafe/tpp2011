@@ -47,15 +47,22 @@ Qed.
 Parameter c0 : child.
 
 
-Definition max k := C.fold.
+Definition max k : candy :=
+  C.fold nat (fun c acc => MinMax.max (m(c,k)) acc) C.children (m(c0,k)).
 
-Parameter max min : nat -> nat.
-Parameter num : candy * nat -> nat.
+Definition min k : candy :=
+  C.fold nat (fun c acc => MinMax.min (m(c,k)) acc) C.children (m(c0,k)).
 
-Axiom min_minimum : forall k c, min k <= m(c, k).
-Axiom max_maximum : forall k c, m(c, k) <= max k.
-Axiom min_exists : forall k, exists c, m(c, k) = min k.
+Definition num (x_k : candy * nat) : nat :=
+  let (x, k) := x_k in
+  C.size (C.filter (fun c => beq_nat(m(c,k)) x) C.children).
 
+
+Lemma min_minimum : forall k c, min k <= m(c, k).
+Proof.
+Admitted. (*TODO*)
+Axiom max_maximum : forall k c, m(c, k) <= max k. (*TODO*)
+Axiom min_exists : forall k, exists c, m(c, k) = min k. (*TODO*)
 
 Lemma min_max : forall k, min k <= max k.
 Proof.
@@ -90,7 +97,6 @@ Proof.
   generalize (min_minimum k c).
   generalize (min_minimum k (right c)). simpl.
  destruct (m_aux c k) as [nc Ec]. destruct (m_aux (right c) k) as [nr Er].
-(* case_eq (m_aux c k). case_eq (m_aux (right c) k). intros nr Hr eq1 nc Hc eq2.*)
  destruct (even_2n _ Er) as [rhalf req].
  destruct (even_2n _ Ec) as [chalf ceq].
  simpl; intros.
@@ -156,10 +162,34 @@ Proof.
  rewrite HH in Hd; apply Hd.
 Qed.
 
+Lemma a : forall k,
+  exists c, m(c, S k) <> min k /\ m(c, k) = min k.
+Proof.
+ intros k.
+Admitted.
+
+Lemma b : forall k c,
+  m(c, S k) = min k -> m(c, k) = min k.
+Admitted.
+ 
 Lemma l5_aux : forall c k,
   m(c, k) = min k -> min k < m(c, S k) -> num(min k, S k) < num (min k, k).
-(* use (3) and finite set's filter lemma*)
-Admitted.
+Proof.
+ intros.
+ unfold num.
+ apply C.filter_length_lt.
+  destruct (a k) as [c0 HH]. destruct HH.
+  exists c0.
+  split.
+   intro; destruct H1.
+   apply beq_nat_true. apply H3.
+
+   apply beq_nat_true_iff. apply H2.
+
+  apply C.filter2_subset. intros c0 H1.
+  apply beq_nat_true_iff. apply b. apply beq_nat_true_iff.
+  apply H1.
+Qed.
  
 Lemma l5 : forall k,
   (exists c, min k < m(c, k)) -> num(min k, S k) < num(min k, k).
@@ -189,7 +219,7 @@ Proof.
   inversion H.
 
   (* case: S d *)
-  destruct (exists_dec _ (fun c => lt_dec (min k) (m(c,k)))).
+  destruct (C.exists_dec _ (fun c => lt_dec (min k) (m(c,k)))).
    (* min k < m(c, k) のとき *)
    destruct (le_lt_eq_dec _ _ (l2 k)).
     (* min k < min (1+k) のとき *)
