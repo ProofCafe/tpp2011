@@ -57,6 +57,16 @@ Proof.
  intro k. destruct (min_exists k). rewrite <- H. apply max_maximum.
 Qed.
 
+Lemma max_even : forall k, even (max k).
+Proof.
+  intro k.
+  generalize (max_exists k).
+  intro H.
+  destruct H as [c H'].
+  rewrite <- H'.
+  apply m_even.
+Qed.
+
 (* 1 *)
 Lemma l1 : forall k, max (S k) <= max k.
   intro k.
@@ -96,17 +106,8 @@ Lemma l1 : forall k, max (S k) <= max k.
     rewrite H3.
     apply max_maximum.
   assert (max k0 = div2 (max k0) + div2 (max k0)).
-    assert (forall m, even m ->  m = div2 m + div2 m).
-      apply even_double.
-    assert (even (max k0)).
-      generalize (max_exists k0).
-      intros.
-      destruct H5.
-      rewrite <- H5.
-      apply m_even.
-    rewrite <- (H4 (max k0) H5).
-    reflexivity.
-  Check even_2n.
+    apply even_double.
+  apply (max_even k0).
   generalize (even_2n x e).
   generalize (even_2n x0 e0).
   intros.
@@ -116,7 +117,7 @@ Lemma l1 : forall k, max (S k) <= max k.
   assert (forall n, 2 * n = double n).
     unfold double; intros; omega.
   rewrite <- (H5 x2), <- (H5 x1) in *.
-  rewrite (div2_double x2),(div2_double x1).
+  rewrite (div2_double x2),(div2_double x1) in *.
   omega.
 
   simpl.
@@ -137,17 +138,8 @@ Lemma l1 : forall k, max (S k) <= max k.
     rewrite H3.
     apply max_maximum.
   assert (max k0 = div2 (max k0) + div2 (max k0)).
-    assert (forall m, even m ->  m = div2 m + div2 m).
-      apply even_double.
-    assert (even (max k0)).
-      generalize (max_exists k0).
-      intros.
-      destruct H5.
-      rewrite <- H5.
-      apply m_even.
-    rewrite <- (H4 (max k0) H5).
-    reflexivity.
-  Check even_2n.
+    apply even_double.
+    apply (max_even k0).
   generalize (even_2n x e).
   generalize (even_2n x0 e0).
   intros.
@@ -165,15 +157,9 @@ Lemma l1 : forall k, max (S k) <= max k.
   split.
   omega.
   rewrite (div2_double x2), (div2_double x1) in o.
-  assert (even (max k0)).
-    generalize (max_exists k0).
-    intros.
-    destruct H7.
-    rewrite <- H7.
-    apply m_even.
   intro.
-  rewrite H8 in *.
-  apply (not_even_and_odd (max k0) H7 o).
+  rewrite H7 in *.
+  apply (not_even_and_odd (max k0) (max_even k0) o).
 
   generalize (max_exists (S k)).
   intro.
