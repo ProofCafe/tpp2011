@@ -94,16 +94,148 @@ Proof.
  rewrite div2_double. rewrite div2_double.
  unfold double in req. unfold double in ceq.
  destruct (even_odd_dec (chalf + rhalf)); simpl.
-  (* 偶数 *)
+  (* \u5076\u6570 *)
   omega.
   
-  (* 奇数 *)
+  (* \u5947\u6570 *)
   omega.
 Qed.
 
 (* 3 *)
+Lemma l3_subgoal1 : forall c k,
+  min k < m(c, k) -> min k <= m(right(c), k).
+Proof.
+ intros.
+ apply min_minimum.
+Qed.
+
+(*
+Lemma l3_aux2 : forall c k,
+  0 < k -> m(c, S k)*2 > m(c, k) + m(right(c), k).
+Proof.
+Admitted.
+ *)
+
 Lemma l3 : forall c k,
   min k < m(c, k) -> min k < m(c, S k).
+Proof.
+ intros c k.
+ simpl.
+ case_eq (m_aux c k).
+ intros.
+ case_eq (m_aux (right c) k).
+ intros.
+ destruct (even_odd_dec (div2 x + div2 x0)).
+  simpl.
+  apply (le_lt_trans _ (div2 (min k) + div2 x0)).
+   cut (min k = div2(min k) + div2(min k)); intros.
+    rewrite H2 at 1.
+    apply (plus_le_compat_l (div2 (min k)) (div2 x0) (div2 (min k))).
+    assert(double (div2 (min k)) <= double (div2 x0)).
+    rewrite<- (even_double (min k)).
+    rewrite<- (even_double x0).
+    generalize (min_minimum k).
+    intros.
+     assert (x0 = m (right c, k)).
+     change (x0 = proj1_sig (m_aux (right c) k)).
+     rewrite  H1.
+     simpl.
+     auto.
+     rewrite H4.
+     apply min_minimum.
+    assumption.
+    rewrite H2.
+    fold (double (div2 (min k))).
+    apply double_even.
+    rewrite H2 at 1.
+    auto.
+
+    assert (x0 = m (right c, k)).
+    change (x0 = proj1_sig (m_aux (right c) k)).
+    rewrite H1.
+    simpl.
+    auto.
+    rewrite H4.
+    assert (forall x y, (even(x) /\ even(y) /\ (x<=y)) -> (div2(x) <= div2(y))).
+    intros.
+    destruct H5.
+    destruct H6.
+    apply even_2n in H5.
+    apply even_2n in H6.
+    destruct H5.
+    destruct H6.
+    rewrite e2, e3.
+    assert(forall n, double n = 2 * n).
+     intros.
+     unfold double.
+     omega.
+    
+     rewrite (H5 x2),(H5 x3).
+     rewrite div2_double.
+     rewrite div2_double.
+       rewrite e2 in H7.
+       rewrite e3 in H7.
+       unfold double in H7.
+       omega.
+
+      apply H5.
+      split.
+      rewrite H2.
+      fold (double (div2 (min k))).
+      apply double_even.
+      rewrite H2 at 1.
+      fold (double (div2 (min k))).
+      auto.
+      split.
+      apply m_even.
+      apply min_minimum.
+
+(* Admitting defeat *)
+
+(*
+
+Print double.
+    Check div2_double.
+ 
+    rewrite<- (div2_double (div2 x1)).
+    induction x1; induction y; simpl; try omega; try eauto.
+    
+    simpl.
+    omega.
+    simpl.
+    auto.
+    omega.
+    simpl.
+    
+
+Check (proj1_sig (m_aux (right c) k)).
+Print m.
+    assert (x0 = m(right(c), k)).
+    apply (min_minimum k (right c)).
+    apply H3.
+    destruct H.
+    apply (min_minimum k ).
+Check le_lt_trans.
+
+  cut (forall x y y', y < y' -> x < y+z -> x < y'+z).
+  Check (plus_lt_compat_r (div2 (min k))(div2 x)).
+ destruct (m_aux c k).
+ destruct (m_aux (right c) k).
+ destruct (even_odd_dec((div2 x)+(div2 x0))).
+  simpl.
+  intros.
+  transitivity x.
+   apply H.
+   
+  case_eq (m_aux c k).
+  intros.
+  case_eq (m_aux (right c) k).
+  intros.
+  destruct (even_odd_dec (div2 x + div2 x0)).
+   simpl.
+   destruct (min k).
+   destruct e1.
+ *)
 Admitted.
 
 (* 4 *)
@@ -130,11 +262,11 @@ Proof.
 
   (* case: S n *)
   destruct(le_lt_eq_dec (min k) (m(fpow n right c, k))); [apply min_minimum| |].
-   (* min k < m (fpow n right c, k) のとき *)
+   (* min k < m (fpow n right c, k) \u306e\u3068\u304d *)
    destruct (IHn c H l).
    exists x; apply H1.
 
-   (* min k = m (fpow n right c, k) のとき *)
+   (* min k = m (fpow n right c, k) \u306e\u3068\u304d *)
    exists (fpow n right c).
    split; [rewrite e; reflexivity | rewrite <- e; apply H0].
 Qed.
@@ -184,12 +316,12 @@ Proof.
 
   (* case: S d *)
   destruct (exists_dec _ (fun c => lt_dec (min k) (m(c,k)))).
-   (* min k < m(c, k) のとき *)
+   (* min k < m(c, k) \u306e\u3068\u304d *)
    destruct (le_lt_eq_dec _ _ (l2 k)).
-    (* min k < min (1+k) のとき *)
+    (* min k < min (1+k) \u306e\u3068\u304d *)
     exists 1; right; apply l.
 
-    (* min k = min (1+k) のとき *)
+    (* min k = min (1+k) \u306e\u3068\u304d *)
     destruct (IHd (S k)) as [i HH].
      rewrite <- e0.
      eapply lt_le_trans; [apply (l5 _ e) | apply (lt_n_Sm_le _ _ H)].
@@ -197,7 +329,7 @@ Proof.
      exists (S i). rewrite plus_Snm_nSm. rewrite e0.
      destruct HH; [left | right]; apply H0.
 
-   (* min k >= m(c, k) のとき *)
+   (* min k >= m(c, k) \u306e\u3068\u304d *)
    exists 0. left. simpl. unfold same. intros.
    destruct (le_lt_eq_dec _ _ (min_minimum k c)); auto.
    destruct (n c); apply l.
