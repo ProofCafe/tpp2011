@@ -50,6 +50,7 @@ Parameter num : candy * nat -> nat.
 Axiom min_minimum : forall k c, min k <= m(c, k).
 Axiom max_maximum : forall k c, m(c, k) <= max k.
 Axiom min_exists : forall k, exists c, m(c, k) = min k.
+Axiom max_exists : forall k, exists c, m(c, k) = max k.
 
 Lemma min_max : forall k, min k <= max k.
 Proof.
@@ -58,8 +59,131 @@ Qed.
 
 (* 1 *)
 Lemma l1 : forall k, max (S k) <= max k.
-Proof.
-Admitted.
+  intro k.
+  cut (exists c, max (S k) <= m (c,k)). (* subgoal A introduced *)
+  intro H.
+  assert (forall c, m (c,k) <= max k); try apply max_maximum.
+  destruct H.
+  specialize H0 with x.
+  Require Import Omega.
+  omega. (* main goal reached *)
+  Show.  
+  assert (exists c, m(c,k) = max k); try apply max_exists.
+  assert (forall c k, m (c,(S k)) <= max k).
+  intros.
+  simpl.
+  case_eq (m_aux c k0).
+  intros.
+  case_eq (m_aux (right c) k0).
+  intros.
+  destruct (even_odd_dec (div2 x + div2 x0)).
+
+  simpl.
+  assert (x <= max k0).
+    assert (x = m (c,k0)).
+      simpl.
+      rewrite H0.
+      simpl.
+      reflexivity.
+    rewrite H2.
+    apply max_maximum.
+  assert (x0 <= max k0).
+    assert (x0 = m (right c,k0)).
+      simpl.
+      rewrite H1.
+      simpl.
+      reflexivity.
+    rewrite H3.
+    apply max_maximum.
+  assert (max k0 = div2 (max k0) + div2 (max k0)).
+    assert (forall m, even m ->  m = div2 m + div2 m).
+      apply even_double.
+    assert (even (max k0)).
+      generalize (max_exists k0).
+      intros.
+      destruct H5.
+      rewrite <- H5.
+      apply m_even.
+    rewrite <- (H4 (max k0) H5).
+    reflexivity.
+  Check even_2n.
+  generalize (even_2n x e).
+  generalize (even_2n x0 e0).
+  intros.
+  destruct H5.
+  destruct H6.
+  rewrite e2,e3 in *.
+  assert (forall n, 2 * n = double n).
+    unfold double; intros; omega.
+  rewrite <- (H5 x2), <- (H5 x1) in *.
+  rewrite (div2_double x2),(div2_double x1).
+  omega.
+
+  simpl.
+  assert (x <= max k0).
+    assert (x = m (c,k0)).
+      simpl.
+      rewrite H0.
+      simpl.
+      reflexivity.
+    rewrite H2.
+    apply max_maximum.
+  assert (x0 <= max k0).
+    assert (x0 = m (right c,k0)).
+      simpl.
+      rewrite H1.
+      simpl.
+      reflexivity.
+    rewrite H3.
+    apply max_maximum.
+  assert (max k0 = div2 (max k0) + div2 (max k0)).
+    assert (forall m, even m ->  m = div2 m + div2 m).
+      apply even_double.
+    assert (even (max k0)).
+      generalize (max_exists k0).
+      intros.
+      destruct H5.
+      rewrite <- H5.
+      apply m_even.
+    rewrite <- (H4 (max k0) H5).
+    reflexivity.
+  Check even_2n.
+  generalize (even_2n x e).
+  generalize (even_2n x0 e0).
+  intros.
+  destruct H5.
+  destruct H6.
+  rewrite e1,e2 in *.
+  assert (forall n, 2 * n = double n).
+    unfold double; intros; omega.
+  rewrite <- (H5 x2), <- (H5 x1) in *.
+  rewrite (div2_double x2),(div2_double x1).
+  apply lt_le_S.
+  assert (x2 + x1 <= max k0 /\ x2 + x1 <> max k0 -> x2 + x1 < max k0).
+    omega.
+  apply H6.
+  split.
+  omega.
+  rewrite (div2_double x2), (div2_double x1) in o.
+  assert (even (max k0)).
+    generalize (max_exists k0).
+    intros.
+    destruct H7.
+    rewrite <- H7.
+    apply m_even.
+  intro.
+  rewrite H8 in *.
+  apply (not_even_and_odd (max k0) H7 o).
+
+  generalize (max_exists (S k)).
+  intro.
+  destruct H.
+  exists x.
+  destruct H1.
+  rewrite <- H1.
+  rewrite H.
+  apply H0.
+Qed.
 
 Lemma max_i : forall i k, max (i + k) <= max k.
 Proof.
