@@ -1,5 +1,4 @@
-Require Import String.
-Require Import MSetList.
+Module Type MChildren.
 
 (* 一人の子供の型 *)
 Parameter child : Set.
@@ -40,3 +39,4 @@ Parameter children : cset.
 
 Axiom children_finite : forall c, In c children.
 
+End MChildren.

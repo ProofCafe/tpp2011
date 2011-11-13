@@ -2,8 +2,9 @@ Require Import Arith.
 Require Import Even.
 Require Import Div2.
 Require Import Omega.
-Require Children.
-Module C := Children.
+Require Import Children.
+
+Module Make(C : MChildren).
 
 Definition child := C.child.
 Parameter right : child -> child.
@@ -524,3 +525,5 @@ Proof.
   exists k. intros c1 c2. rewrite plus_0_r in H. rewrite (H c1). rewrite (H c2).
   reflexivity.
 Qed.
+
+End Make.
