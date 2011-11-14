@@ -78,8 +78,6 @@ Proof.
     apply (le_trans _ _ _ (H H1)). apply Max.le_max_r.
 Qed.
 
-(* !! trying to define min *)
-  
 Definition nat_min := MinMax.min.
 
 Definition min_m k c x := nat_min (m(c,k)) x.
