@@ -77,10 +77,42 @@ Proof.
 
     apply (le_trans _ _ _ (H H1)). apply Max.le_max_r.
 Qed.
-  
-Parameter min : nat -> nat.
 
-Axiom min_minimum : forall k c, min k <= m(c, k).
+(* !! trying to define min *)
+  
+Definition nat_min := MinMax.min.
+
+Definition min_m k c x := nat_min (m(c,k)) x.
+
+Lemma nat_min_ascomm : forall x y z,
+  nat_min x (nat_min y z) = nat_min y (nat_min x z).
+Proof.
+   intros x y z. rewrite (Min.min_assoc y).
+   rewrite (Min.min_comm _ x). rewrite <- (Min.min_assoc x).
+   reflexivity.
+Qed.
+
+Definition min k :=
+  C.fold (min_m k) C.children (m(C.c0,k)).
+
+Lemma min_minimum : forall k c, min k <= m(c, k).
+Proof.
+ cut(forall k c x0 cs,
+   C.In c cs -> C.fold (min_m k) cs x0 <= m(c, k));
+     [intros aux k c; apply aux; apply C.children_finite | ].
+ intros k c x0.
+ apply (C.ind (fun cs => C.In c cs ->
+   C.fold (min_m k) cs x0 <= m (c, k)));intros.
+  rewrite C.fold_empty.
+  destruct (C.empty_in c). apply H.
+
+  rewrite C.fold_step; [| intros; apply nat_min_ascomm].
+  simpl in H0. destruct (C.add_in _ _ _ H0).
+    rewrite H1. apply Min.le_min_l.
+
+    refine (le_trans (min_m k x (C.fold (min_m k) xs x0)) (C.fold (min_m k) xs x0)  (m (c,k)) _ (H H1)).
+    apply Min.le_min_r.
+Qed.
 
 Lemma max_exists : forall k, exists c, m(c, k) = max k.
 Proof.

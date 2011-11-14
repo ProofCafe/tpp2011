@@ -1,3 +1,7 @@
+Require Import Div2.
+Require Import Even.
+Require Import Omega.
+
 Lemma monotone_double_double_r : forall m n, double m <= double n -> m <= n .
   unfold double.
   intros.
