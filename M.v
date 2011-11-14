@@ -134,7 +134,26 @@ Proof.
    apply lt_le_weak. apply not_le. apply n.
 Qed.
 
-Axiom min_exists : forall k, exists c, m(c, k) = min k.
+(* !! *)
+Lemma min_exists : forall k, exists c, m(c, k) = min k.
+Proof.
+ intro k.
+ cut (forall cs, exists c, m(c,k) = C.fold (min_m k) cs (m(C.c0,k))); [intro aux; apply aux|].
+ (* aux *)
+ apply C.ind.
+  (* case: empty *)
+  rewrite C.fold_empty. exists C.c0. reflexivity.
+
+  (* case: step *)
+  intros c cs IH. rewrite C.fold_step; [| intros; apply nat_min_ascomm].
+  unfold min_m at 1. destruct (le_dec (C.fold (min_m k) cs (m (C.c0, k))) (m(c,k))). 
+   unfold nat_min. destruct IH. exists x.
+   rewrite Min.min_r; [apply H | apply l].
+
+   unfold nat_min. exists c.
+   rewrite Min.min_l; [reflexivity | ].
+   apply lt_le_weak. apply not_le. apply n.
+Qed.  
 
 Lemma min_max : forall k, min k <= max k.
 Proof.
