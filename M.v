@@ -110,7 +110,7 @@ Proof.
   simpl in H0. destruct (C.add_in _ _ _ H0).
     rewrite H1. apply Min.le_min_l.
 
-    refine (le_trans (min_m k x (C.fold (min_m k) xs x0)) (C.fold (min_m k) xs x0)  (m (c,k)) _ (H H1)).
+    refine (le_trans _ _ _ _ (H H1)).
     apply Min.le_min_r.
 Qed.
 
