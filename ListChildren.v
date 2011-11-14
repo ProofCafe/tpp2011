@@ -59,7 +59,12 @@ Proof.
 
   destruct H. destruct H. destruct H1.
   exists x. split.
-   intro.
+   intro. edestruct (filter_spec1 _ f); [apply H3|].
+   destruct H1. apply H5.
+
+   apply  (filter_spec2); [apply H| apply H2].
+Qed.
+
 SearchPattern(List.In _ (List.filter _ _) -> _).
  : forall {A:Type} (neqdec : forall x y: A, {x<>y}+{x=y})
 

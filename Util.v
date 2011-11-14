@@ -82,6 +82,18 @@ Lemma filter_In : forall {A:Type} {P Q:A->Prop} xs ys f (a:A),
   (In a xs -> In a ys) -> In a (@filter_dec A P Q f xs) ->
   In a (filter_dec f ys).
 Admitted.
+Section filterb.
+  Variable A : Type.
+  Variable f : A -> bool.
+
+  Lemma filter_spec1 : forall xs x,
+    In x (filter f xs) -> In x xs /\ f x = true.
+  Admitted.
+
+  Lemma filter_spec2 : forall xs x,
+    In x xs -> f x = true -> In x (filter f xs).
+  Admitted.
+End filterb.
 
 Section Equiv.
   Require Import Arith.
