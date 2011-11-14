@@ -45,47 +45,73 @@ Proof.
  intros c k; simpl. destruct (m_aux c k). apply e.
 Qed.
 
+Definition nat_max := MinMax.max.
+
+Definition max_m k c x := nat_max (m(c,k)) x.
+
+Lemma nat_max_ascomm : forall x y z,
+  nat_max x (nat_max y z) = nat_max y (nat_max x z).
+Proof.
+   intros x y z. rewrite (Max.max_assoc y).
+   rewrite (Max.max_comm _ x). rewrite <- (Max.max_assoc x).
+   reflexivity.
+Qed.
+
 Definition max k :=
-  C.fold (fun c acc => MinMax.max (m(c,k)) acc) C.children (m(C.c0,k)).
+  C.fold (max_m k) C.children (m(C.c0,k)).
 
 Lemma max_maximum : forall k c, m(c, k) <= max k.
 Proof.
  cut(forall k c x0 cs,
-   C.In c cs -> m(c, k) <= C.fold (fun c acc => MinMax.max (m(c,k)) acc) cs x0);
+   C.In c cs -> m(c, k) <= C.fold (max_m k) cs x0);
      [intros aux k c; apply aux; apply C.children_finite | ].
  intros k c x0.
  apply (C.ind (fun cs => C.In c cs ->
-   m (c, k) <= C.fold (fun c0 acc => MinMax.max (m (c0, k)) acc) cs x0));intros.
+   m (c, k) <= C.fold (max_m k) cs x0));intros.
   rewrite C.fold_empty.
   destruct (C.empty_in c). apply H.
 
-  rewrite C.fold_step.
-   simpl in H0. destruct (C.add_in _ _ _ H0).
+  rewrite C.fold_step; [| intros; apply nat_max_ascomm].
+  simpl in H0. destruct (C.add_in _ _ _ H0).
     rewrite H1. apply Max.le_max_l.
 
     apply (le_trans _ _ _ (H H1)). apply Max.le_max_r.
-
-   intros a b. rewrite (Max.max_assoc (m(b,k))).
-   rewrite (Max.max_comm _ (m(a,k))). rewrite <- (Max.max_assoc (m(a,k))).
-   reflexivity.
 Qed.
   
-
 Parameter min : nat -> nat.
-
-Definition num (x_k : candy * nat) : nat :=
-  let (x, k) := x_k in
-  C.size (C.filter (fun c => beq_nat(m(c,k)) x) C.children).
 
 Axiom min_minimum : forall k c, min k <= m(c, k).
 
+Lemma max_exists : forall k, exists c, m(c, k) = max k.
+Proof.
+ intro k.
+ cut (forall cs, exists c, m(c,k) = C.fold (max_m k) cs (m(C.c0,k))); [intro aux; apply aux|].
+ (* aux *)
+ apply C.ind.
+  (* case: empty *)
+  rewrite C.fold_empty. exists C.c0. reflexivity.
+
+  (* case: step *)
+  intros c cs IH. rewrite C.fold_step; [| intros; apply nat_max_ascomm].
+  unfold max_m at 1. destruct (le_dec (m(c,k)) (C.fold (max_m k) cs (m (C.c0, k)))).
+   unfold nat_max. destruct IH. exists x.
+   rewrite Max.max_r; [apply H | apply l].
+
+   unfold nat_max. exists c.
+   rewrite Max.max_l; [reflexivity | ].
+   apply lt_le_weak. apply not_le. apply n.
+Qed.
+
 Axiom min_exists : forall k, exists c, m(c, k) = min k.
-Axiom max_exists : forall k, exists c, m(c, k) = max k.
 
 Lemma min_max : forall k, min k <= max k.
 Proof.
  intro k. destruct (min_exists k). rewrite <- H. apply max_maximum.
 Qed.
+
+Definition num (x_k : candy * nat) : nat :=
+  let (x, k) := x_k in
+  C.size (C.filter (fun c => beq_nat(m(c,k)) x) C.children).
 
 Lemma max_even : forall k, even (max k).
 Proof.
