@@ -507,7 +507,7 @@ Proof.
  intros.
  unfold num.
  apply C.filter_length_lt.
-  exists c. split.
+  exists c. split; [apply C.children_finite|]. split.
    intro. destruct (beq_nat_true_iff (m(c,S k)) (min k)) as[HH _].
    destruct (lt_irrefl (min k)). rewrite <- (HH H1) at 2. apply H0.
 

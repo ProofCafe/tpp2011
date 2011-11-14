@@ -25,7 +25,7 @@ Axiom size_in : forall xs ys,
   Subset xs ys -> size xs <= size ys.
 
 Axiom filter_length_lt : forall f g xs,
-  (exists x, f x <> true /\ g x = true) ->
+  (exists x, In x xs /\ f x <> true /\ g x = true) ->
   Subset (filter f xs) (filter g xs) ->
   size (filter f xs) < size (filter g xs).
 

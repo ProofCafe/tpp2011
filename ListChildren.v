@@ -65,9 +65,6 @@ Proof.
    apply  (filter_spec2); [apply H| apply H2].
 Qed.
 
-SearchPattern(List.In _ (List.filter _ _) -> _).
- : forall {A:Type} (neqdec : forall x y: A, {x<>y}+{x=y})
-
 Parameter add : child -> cset -> cset.
 
 Axiom add_in : forall c0 c1 cs, In c0 (add c1 cs) -> c0 = c1 \/ In c0 cs.
