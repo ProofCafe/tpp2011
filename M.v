@@ -247,9 +247,7 @@ Qed.
 (* 1 *)
 Lemma l1 : forall k, max (S k) <= max k.
   intro k.
-  generalize (max_S_k_is_LE_m_c_k_for_some_c k).
-  intro H.
-  destruct H.
+  destruct (max_S_k_is_LE_m_c_k_for_some_c k) as [x H].
   generalize (max_maximum k x).
   omega. 
 Qed.
