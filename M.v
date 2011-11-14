@@ -134,7 +134,6 @@ Proof.
    apply lt_le_weak. apply not_le. apply n.
 Qed.
 
-(* !! *)
 Lemma min_exists : forall k, exists c, m(c, k) = min k.
 Proof.
  intro k.
