@@ -40,12 +40,12 @@ Proof.
    destruct (g a); [apply subset_cons|]; apply IHxs.
 Qed.
 
-Definition size (cs: cset) : nat := List.length (div_eq eq_dec cs).
+Definition size (cs: cset) : nat := List.length (div_eq _ eq_dec cs).
 
 Lemma size_in : forall xs ys,
   Subset xs ys -> size xs <= size ys.
 Proof.
- apply div_equiv_aux_length.
+ apply div_eq_aux_length.
 Qed.
 
 Lemma filter_length_lt : forall f g xs,
