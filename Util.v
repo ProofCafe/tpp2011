@@ -5,11 +5,15 @@ Definition Subset {A:Type} xs ys := forall (x:A), In x xs -> In x ys.
 
 Lemma subset_conscons : forall {A:Type} (x:A) xs ys,
   Subset xs ys -> Subset (x :: xs) (x :: ys).
-Admitted.
+Proof.
+  firstorder.
+Qed.
 
 Lemma subset_cons : forall {A:Type} (x:A) xs ys,
   Subset xs ys -> Subset xs (x :: ys).
-Admitted.
+Proof.
+  firstorder.
+Qed.
 
 Fixpoint filter_dec {A : Type} {P Q: A -> Prop}
   (f : forall x, {P x} + {Q x}) (l:list A) : list A :=
