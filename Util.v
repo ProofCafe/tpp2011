@@ -22,24 +22,31 @@ Fixpoint filter_dec {A : Type} {P Q: A -> Prop}
   | x :: l => if (f x) then x::(filter_dec f l) else filter_dec f l
   end.
 
+Lemma filter_dec_In_stronger : forall {A: Type} {P Q: A -> Prop} (f : forall x, {P x} + {Q x}) (x:A) (l: list A),
+  In x (filter_dec f l) -> In x l /\ (exists p : P x, f x = left (Q x) p).
+Proof.
+  intros A P Q f x l H.
+  induction l; [ simpl in H; tauto | ].
+  simpl in *.
+  split;
+    [destruct (f a); simpl in H; try tauto
+    | case_eq (f a); [intros p H0 | intros q H0]; rewrite H0 in H].
+  (* p *)
+    simpl in H.
+    destruct H;
+      [ subst a; exists p; exact H0
+      | destruct (IHl H); tauto].
+  (* q *)
+    destruct (IHl H); tauto.
+Qed.
+
 Lemma filter_dec_In : forall {A: Type} {P Q: A -> Prop} (f : forall x, {P x} + {Q x}) (x:A) (l: list A),
   In x (filter_dec f l) -> In x l /\ P x.
 Proof.
-intros A P Q f.
- induction l; simpl.
-  intro H; elim H.
-  
-  case (f a); simpl in |- *.
-   intros H _H; elim _H; intros.
-    split; [ left | rewrite <- H0 in |- * ]; assumption.
-    
-    elim (IHl H0); intros.
-    split; [ right | idtac ]; assumption.
-    
-   intros _ H; elim (IHl H); intros.
-   split; [ right | idtac ]; assumption.
+  intros A P Q f x l H.
+  destruct (filter_dec_In_stronger f x l H) as [H0 [p H1]].
+  exact (conj H0 p).
 Qed.
-
 
 Lemma filter_dec_length : forall {A: Type} {P Q: A -> Prop} (f : forall x, {P x} + {Q x}) (xs: list A),
   length (filter_dec f xs) <= length xs.
@@ -56,7 +63,18 @@ Qed.
 Lemma filter_incl : forall {A:Type} {P Q: A -> Prop} (f : forall x, {P x}+{Q x})
   (xs : list A) x,
   In x (filter_dec f xs) -> In x xs.
-Admitted.
+Proof.
+  intros A P Q f xs x H.
+  induction xs.
+  (* base case *)
+  auto. (* simpl in *; exact H. *)
+  (* induction step *)
+  simpl.
+  simpl in H.
+  destruct (f a) in H.
+  elim H; auto.
+  auto.
+Qed.  
 
 Lemma filter_dec_In_not1 : forall {A: Type} {P: A -> Prop} (f : forall x, {P x} + {~P x}) (x:A) (xs: list A),
   In x xs -> P x -> In x (filter_dec f xs).
@@ -82,32 +100,190 @@ elim H; intro HH; [rewrite HH; left; reflexivity | right; apply (IHxs HH H0)].
 elim H; intro HH; [rewrite HH; intro HH0; elim H0; apply HH0 | intros _; apply (IHxs HH H0)].
 Qed.
 
+Lemma filter_dec_In_f : forall {A:Type} {P Q:A ->Prop} (f:forall x, {P x}+{Q x}) (x:A) (l:list A) (H:In x l), if (f x) then In x (filter_dec f l) else ~ In x (filter_dec f l).
+Proof.
+  intros A P Q f x l H.
+  case_eq (f x); [intros p Hl | intros q Hr].
+  (* In x (filter_dec f l) *)
+    induction l; auto.
+    simpl in *.
+    destruct H.
+    (* a = x *)
+      rewrite H in *; clear H.
+      rewrite Hl; clear Hl.
+      simpl.
+      left; reflexivity.
+    (* In x l *)
+      destruct (f a); simpl; auto.
+  (* ~ In x (filter_dec f l) *)
+    induction l.
+    (* base case *)
+      simpl in H; tauto.
+    (* induction step *)
+      intro Habsurd.
+      simpl in Habsurd.
+      generalize (filter_incl f l x); intro Hincl.
+      case_eq (f a); [intros p0 Hp0 | intros q0 Hq0].
+      (* p0 *)
+        assert (a = x -> False) as ax;
+          [intro; subst a; rewrite Hr in Hp0; discriminate | ].
+        destruct H; [auto | change (In x l) in H].
+        rewrite Hp0 in Habsurd.
+        simpl in Habsurd.
+        destruct Habsurd; [auto | firstorder].
+      (* q0 *)
+        rewrite Hq0 in Habsurd.
+        exact (IHl (Hincl Habsurd) Habsurd).
+Qed.
+
+Lemma filter_dec_In_f_r : forall {A: Type} {P Q: A -> Prop} (f : forall x, {P x} + {Q x}) (x:A) (l: list A),
+  In x l /\ (exists p : P x, f x = left (Q x) p)
+  -> In x (filter_dec f l).
+Proof.
+  intros A P Q f x l H.
+  induction l.
+  (* base case *)
+    simpl in H; destruct H; auto.
+  (* induction step *)
+    simpl in *.
+    generalize (filter_dec_In_f f x l); intro Hf.
+    destruct H as [H Hp].
+    destruct H.
+    (* a = x *)
+      destruct Hp as [p Hp].
+      subst a.
+      destruct (f x);
+        [simpl; auto | discriminate].
+    (* In x l *)
+      assert (In x (filter_dec f l)) as IHl';
+        [exact (IHl (conj H Hp)) | clear IHl].
+      destruct (f a); simpl; auto.
+Qed.
+
+Lemma filter_dec_In_r_weaker : forall {A: Type} {P Q: A -> Prop} (f : forall x, {P x} + {Q x}) (x:A), ~ (P x /\ Q x) -> forall (l: list A),
+  In x l /\ P x -> In x (filter_dec f l).
+Proof.
+  intros A P Q f x npq.
+  induction l.
+  (* base case *)
+    simpl; tauto.
+  (* induction step *)
+    intro H; destruct H as [H H0].
+    simpl in H.
+    destruct H.
+    (* a = x *)
+      simpl.
+      destruct (f a); rewrite H in *; simpl; tauto.
+    (* In x l *)
+      generalize (IHl (conj H H0)); clear IHl; intro IHl.
+      simpl; destruct (f a); simpl; auto.
+Qed.
+
 Lemma filter_In : forall {A:Type} {P Q:A->Prop} xs ys f (a:A),
   (In a xs -> In a ys) -> In a (@filter_dec A P Q f xs) ->
   In a (filter_dec f ys).
-Admitted.
+Proof.
+  intros A P Q xs ys f a Hxsys Haxs.
+  generalize (filter_dec_In_f f a xs); intro Hf.
+  generalize (filter_dec_In_stronger f a xs Haxs); intro H.
+  destruct H as [H [p Hp]].
+  rewrite Hp in Hf.
+  generalize (Hxsys H); clear Hxsys; intro Hxsys.
+  generalize (Hf H); clear Hf; intro Hf.
+  refine (filter_dec_In_f_r f a ys (conj Hxsys _)).
+  exists p; exact Hp.
+Qed.
 
 Lemma filter_equiv : forall {A:Type} (P Q P' Q':A->Prop)
   (f:forall x:A,{P x}+{P' x}) (g:forall x:A, {Q x}+{Q' x}) xs,
   (forall x, P x <-> Q x) -> filter_dec f xs = filter_dec g xs.
 Admitted.
 
+Section Falsity_of_filter_equiv.
+  Definition A := nat.
+  Definition P := fun x : A => True.
+  Definition f := fun x : A => left (P x) I.
+  Definition g := fun x : A => right (P x) I.
+  Definition xs := (0 :: nil) : list A.
+  Definition discriminator :=
+    fun xs : list A => if xs then False else True.
+  Theorem falsity : False.
+  Proof.
+    refine (eq_ind (filter_dec f xs) discriminator I (filter_dec g xs) (filter_equiv P P P P f g xs _)).
+    tauto.
+  Qed.
+End Falsity_of_filter_equiv.
+
 Lemma filter_filter : forall {A:Type} (P Q P' Q':A->Prop)
   (f:forall x:A,{P x}+{P' x}) (g:forall x:A, {Q x}+{Q' x}) xs,
   filter_dec f (filter_dec g xs) = filter_dec g (filter_dec f xs).
-Admitted.
+Proof.
+  intros A P Q P' Q' f g xs.
+  induction xs; simpl; [auto | ].
+  case_eq (g a);
+    [ intros pg Hpg; case_eq (f a); [intros pf Hpf | intros qf Hqf]
+    | intros qg Hqg; case_eq (f a); [intros pf Hpf | intros qf Hqf] ].
+
+  simpl.
+  rewrite Hpg,Hpf,IHxs.
+  reflexivity.
+
+  simpl.
+  rewrite Hqf,IHxs.
+  reflexivity.
+
+  simpl.
+  rewrite Hqg,IHxs.
+  reflexivity.
+
+  simpl.
+  rewrite IHxs.
+  reflexivity.
+Qed.
 
 Section filterb.
   Variable A : Type.
   Variable f : A -> bool.
 
+  Lemma filter_filter_dec : forall xs x,
+    In x (filter f xs) ->
+    In x (filter_dec (fun a => sumbool_of_bool (f a)) xs).
+      intros xs x H.
+      induction xs; [simpl in H; tauto | ].
+      simpl in *.
+      destruct (f a); simpl in *; [destruct H; tauto | tauto].
+  Qed.
+
+  Lemma filter_dec_filter : forall xs x,
+    In x (filter_dec (fun a => sumbool_of_bool (f a)) xs) ->
+    In x (filter f xs).
+      intros xs x H.
+      induction xs; [simpl in H; tauto | ].
+      simpl in *.
+      destruct (f a); simpl in *; [destruct H; tauto | tauto].
+  Qed.
+
   Lemma filter_spec1 : forall xs x,
     In x (filter f xs) -> In x xs /\ f x = true.
-  Admitted.
+  Proof.
+    intros xs x H.
+    apply (filter_dec_In (fun a => sumbool_of_bool (f a)) x xs).
+    apply filter_filter_dec.
+    assumption.
+  Qed.
 
   Lemma filter_spec2 : forall xs x,
     In x xs -> f x = true -> In x (filter f xs).
-  Admitted.
+  Proof.
+    intros xs x H H0.
+    apply (filter_dec_filter).
+    apply (filter_dec_In_f_r (fun a => sumbool_of_bool (f a)) x xs).
+    split; [assumption | ].
+    exists H0.
+    rewrite H0.
+    simpl.
+    reflexivity.
+  Qed.
 End filterb.
 
 Section Equiv.
